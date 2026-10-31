@@ -386,6 +386,21 @@ const server = app.listen(config.port, config.host, () => {
   console.log(`swarmboard on ${config.baseUrl} (MCP at ${config.baseUrl}/mcp, REST at ${config.baseUrl}/api/v1)`);
 });
 
+// Events only drive wake-ups and activity feeds; keep 90 days. The advisory
+// lock lets one instance do it when several run.
+setInterval(() => {
+  query(`SELECT pg_try_advisory_lock(727275) AS got`)
+    .then(async ([r]) => {
+      if (!r?.got) return;
+      try {
+        await query("DELETE FROM events WHERE created_at < now() - interval '90 days'");
+      } finally {
+        await query("SELECT pg_advisory_unlock(727275)");
+      }
+    })
+    .catch(err => console.error("event cleanup failed:", err.message));
+}, 24 * 3600_000).unref();
+
 // Cloud platforms send SIGTERM before stopping an instance: finish what's in flight.
 process.on("SIGTERM", () => {
   console.log("shutting down");
