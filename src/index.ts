@@ -121,9 +121,16 @@ app.get("/", async (req, res) => {
   res.send(web.homePage(user, all.filter(p => p.kind === "problem"), all.filter(p => p.kind === "project"), field, await attentionCount(user), errorParam(req)));
 });
 
+const myKeys = (userId: number) =>
+  query("SELECT id, label, created_at, last_used_at, revoked FROM tokens WHERE user_id = $1 ORDER BY id DESC LIMIT 50", [userId]);
+
 app.get("/me", async (req, res) => {
   const user = await auth.browserUser(req);
-  res.send(web.mePage(user, user && (await store.attention(user)), { error: errorParam(req) }));
+  res.send(web.mePage(user, user && (await store.attention(user)), { error: errorParam(req), keys: user && (await myKeys(user.id)) }));
+});
+
+app.get("/about", async (req, res) => {
+  res.send(web.aboutPage(await auth.browserUser(req)));
 });
 
 app.get("/p/:slug", async (req, res) => {
@@ -241,7 +248,12 @@ app.post("/agents/new", action(() => "/me", async (user, req, res) => {
 
 app.post("/me/key", action(() => "/me", async (user, _req, res) => {
   const key = await auth.issueTokenCapped(user.id, "browser key");
-  res.set("Cache-Control", "no-store").send(web.mePage(user, await store.attention(user), { key }));
+  res.set("Cache-Control", "no-store").send(web.mePage(user, await store.attention(user), { key, keys: await myKeys(user.id) }));
+}));
+
+app.post("/me/keys/:id/revoke", action(() => "/me", async (user, req) => {
+  await query("UPDATE tokens SET revoked = TRUE WHERE id = $1 AND user_id = $2", [idParam(req), user.id]);
+  return "/me";
 }));
 
 app.post("/me/use-key", async (req, res) => {

@@ -248,6 +248,14 @@ await other("/me/use-key", { key });
 assert.ok((await (await other("/me")).text()).includes(`you are <b>${handle}</b>`));
 step("a saved key restores the same identity in another browser");
 
+const meHtml = await (await other("/me")).text();
+const keyIds = [...meHtml.matchAll(/action="\/me\/keys\/(\d+)\/revoke"/g)].map(m => m[1]);
+assert.ok(keyIds.length >= 2, "both browser keys are listed");
+await other(`/me/keys/${keyIds[0]}/revoke`, {});
+assert.ok((await (await other("/me")).text()).includes("have an identity on this browser yet"), "revoking the key in use signs this browser out");
+assert.ok((await (await human("/me")).text()).includes(`you are <b>${handle}</b>`), "the other browser's key still works");
+step("identities can list and revoke their keys");
+
 const parserHtml = await (await fetch(`${base}/t/${parser}`)).text();
 assert.ok(parserHtml.includes(`<a href="/t/${tok}">Tokenizer</a> <span class="st st-done">done</span>`), "subtask tree with status");
 const tokHtml = await (await fetch(`${base}/t/${tok}`)).text();
@@ -301,6 +309,8 @@ assert.equal((await fetch(`${base}/static/katex/katex.min.js`)).status, 200);
 const work = await bob.data("suggest_work", {});
 assert.ok(Array.isArray(work));
 assert.ok((await (await fetch(`${base}/contribute`)).text()).includes("swarmboard-agent.mjs"));
+const about = await (await fetch(`${base}/about`)).text();
+assert.ok(about.includes("Privacy") && about.includes("CC BY 4.0"));
 const runner = await fetch(`${base}/swarmboard-agent.mjs`);
 assert.ok(runner.status === 200 && (await runner.text()).includes("suggest_work"));
 step("security headers and no inline scripts; static assets, suggest_work, contribute page and runner download");

@@ -12,8 +12,8 @@ jobs:
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm run typecheck
@@ -31,9 +31,23 @@ jobs:
           npm run smoke
   docker:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: postgres }
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 2s --health-retries 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: docker build -t swarmboard .
-      - name: image contains its runtime files
+      - name: image boots, migrates and serves
         run: |
-          docker run --rm swarmboard sh -c 'ls dist/index.js db/migrations/001_initial.sql public/app.js contrib/swarmboard-agent.mjs node_modules/katex/dist/katex.min.js'
+          docker run -d --name sb --network host -e DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres -e PORT=8787 swarmboard
+          for i in $(seq 1 30); do curl -sf localhost:8787/readyz && break; sleep 1; done
+          curl -sf localhost:8787/readyz
+          curl -sf localhost:8787/static/app.js > /dev/null
+          curl -sf localhost:8787/static/katex/katex.min.js > /dev/null
+          curl -sf localhost:8787/swarmboard-agent.mjs > /dev/null
+          curl -sf localhost:8787/ | grep -q "Open problems"
+      - if: failure()
+        run: docker logs sb

@@ -11,6 +11,8 @@ const usage = `usage: npm run cli -- <command>
   token <handle> [label]     create the identity if needed and print a token
   seed <file.json> [owner]   create the problems in a seed file, owned by [owner] (default: curator)
   steward <slug>             create a steward agent for a problem and print its token
+  remove-message <id>        replace a message's text with a moderation notice
+  remove-project <slug>      delete a project and everything in it
   admin <login>              grant admin
   ban <login> | unban <login>`;
 
@@ -49,6 +51,16 @@ try {
       const p = await store.getProject(args[0]);
       const agent = await upsertUser(`${p.slug.slice(0, 22)}-steward`, "agent", p.owner_id);
       console.log(`${agent.login}\t${await issueToken(agent.id, "steward")}`);
+      break;
+    }
+    case "remove-message": {
+      const r = await query("UPDATE messages SET body = '[removed by a moderator]', resolved = TRUE WHERE id = $1 RETURNING id", [Number(args[0])]);
+      console.log(r.length ? `removed message ${args[0]}` : `no message ${args[0]}`);
+      break;
+    }
+    case "remove-project": {
+      const r = await query("DELETE FROM projects WHERE slug = $1 RETURNING id", [args[0]]);
+      console.log(r.length ? `removed project ${args[0]}` : `no project ${args[0]}`);
       break;
     }
     case "admin": await setFlag(args[0], "is_admin", true); break;

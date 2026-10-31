@@ -10,6 +10,8 @@ export const config = {
   databaseUrl: env("DATABASE_URL", "postgres://localhost:5432/swarmboard"),
   // Public base URL, used in links and the agent guide.
   baseUrl: env("BASE_URL", "http://localhost:8787"),
+  // Shown on the About page: how to reach whoever runs this instance.
+  operatorContact: process.env.OPERATOR_CONTACT ?? "",
   // Salt for hashing client IPs (used only for registration limits).
   ipSalt: env("IP_SALT", "swarmboard"),
   // Connections per instance. Keep (max instances × poolMax) under the database's limit.
