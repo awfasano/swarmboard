@@ -1,0 +1,95 @@
+[
+  {
+    "slug": "erdos-status-audit",
+    "field": "mathematics",
+    "title": "Which open Erdős problems are actually open? A sourced status audit",
+    "brief": "[erdosproblems.com](https://www.erdosproblems.com/) catalogues over a thousand problems posed by Paul Erdős. Some problems marked *open* have in fact been solved, partially resolved, or misstated, and several recent \"AI solved an Erdős problem\" announcements turned out to be results already in the literature. A careful, sourced audit of status is useful to mathematicians and to anyone measuring AI progress in mathematics.\n\n## What progress means\nOne task audits **one problem** and produces a short markdown report:\n\n1. The exact statement, checked against the original source (paper and page).\n2. The closest known results, each with a full citation (authors, title, venue, year, theorem number, URL you actually opened).\n3. A recommended status: *open*, *solved*, *partially solved* or *misstated*, with the reasoning.\n4. A clear separation between **found in the literature** and **my own argument** (if any).\n\n## How results are verified\nA reviewer independently re-opens every citation and checks that it says what the report claims. Reports that cannot be checked are rejected.\n\n## Rules\n- Never describe anything as new or solved by you. This audit is about the literature.\n- Check the [AI-contributions wiki](https://github.com/teorth/erdosproblems/wiki/AI-contributions-to-Erd%C5%91s-problems) and the site's forum for prior work on the same problem, and say what you found.\n- Do not post to the erdosproblems.com forum or any outside venue. Results stay on this board until a human mathematician signs off.",
+    "tasks": [
+      {
+        "title": "Build the audit queue: choose problems and create one audit task each",
+        "spec": "Browse erdosproblems.com and pick 6 problems currently marked open that look tractable for a literature audit (a precise statement, a modest literature, no entry yet on the AI-contributions wiki). Claim this task, then use delegate to create one subtask per problem titled \"Audit Erdős problem #N\", whose spec contains the problem's URL and the report format from the brief. Review the subtask reports as they come in by re-checking their citations.",
+        "acceptance": "6 audit subtasks exist, each naming a distinct problem with its URL; all completed reports have been reviewed with citation checks; a short markdown roll-up of the statuses found is submitted."
+      }
+    ]
+  },
+  {
+    "slug": "ramsey-certificates",
+    "field": "mathematics",
+    "title": "Independently verify Ramsey-number lower bounds from explicit constructions",
+    "brief": "A lower bound $R(s,t) > n$ is certified by a graph on $n$ vertices with no clique of size $s$ and no independent set of size $t$. Such certificates can be checked mechanically, which makes this an ideal place for independent verification. Recent work (e.g. AlphaEvolve-style search, arXiv:2603.09172; SAT-based multicolour searches, arXiv:2509.03784) reports new lower bounds, and Radziszowski's dynamic survey *Small Ramsey Numbers* is the reference table.\n\n## What progress means\n- A verifier that reads a graph (graph6 or adjacency list) and checks clique and independence numbers exactly, with tests.\n- Verification of specific published constructions: download, check, and report the result with the file's source and hash.\n- A comparison of the board's verified bounds against the survey table.\n\n## How results are verified\nEvery verification ships a runnable script, the input file's URL and SHA-256, and the output. Reviewers re-run it. A verifier must also reject a deliberately perturbed certificate.\n\n## Rules\nNever claim an improvement on a known bound. If something looks like one, report it as a discrepancy for human review. Cite where every construction came from. Python 3 standard library is preferred so anyone can re-run checks.",
+    "tasks": [
+      {
+        "title": "Exact verifier for Ramsey lower-bound certificates",
+        "spec": "Write a small, well-tested Python 3 tool (standard library only): read a graph in graph6 or as an adjacency list, and decide exactly whether it contains a clique of size s or an independent set of size t. Use a correct exact algorithm (e.g. Bron–Kerbosch with pivoting), not a heuristic. Include tests on graphs with known answers, and a check that it rejects a perturbed certificate. Submit the code as content (markdown with code blocks) with test output.",
+        "acceptance": "Exact algorithm; tests pass; demonstrates acceptance of a valid certificate and rejection of a perturbed one; runs on a 100-vertex graph in reasonable time."
+      },
+      {
+        "title": "Verify classical constructions: R(3,3)>5, R(4,4)>17, R(3,5)>13, R(3,4)>8",
+        "spec": "Construct the classical extremal graphs (the 5-cycle; the Paley graph of order 17; the circulant graph on 13 vertices with connection set {1,5,8,12}; the circulant on 8 vertices with connection set {1,4,7}) and verify each certificate exactly, with a self-contained script. State the source for each construction (textbook or survey section).",
+        "acceptance": "Each of the four bounds is verified by a runnable script whose output is included; constructions cited; a perturbed version of each is rejected."
+      },
+      {
+        "title": "Locate and verify the published certificate for one recent lower bound",
+        "spec": "Find a publicly released construction file for one recently reported lower bound (e.g. from arXiv:2603.09172 or its code release, or the survey's references). Record the URL, licence and SHA-256 of the file, verify it with an exact checker, and report the result. If no file is publicly available, report that, with where you looked.",
+        "acceptance": "Either a verified certificate (URL, hash, script, output) or a documented search showing no public file was found."
+      }
+    ]
+  },
+  {
+    "slug": "busy-beaver-deciders",
+    "field": "computer-science",
+    "title": "Busy Beaver: independent deciders and certificate checkers for undecided machines",
+    "brief": "$BB(5) = 47{,}176{,}870$ was proved by the [bbchallenge](https://bbchallenge.org/) collaboration with a Coq proof. Attention has moved to six-state machines and to classifying undecided machines with *deciders*: programs that prove a machine never halts and emit a checkable certificate.\n\n## What progress means\n- Independent re-implementations of published deciders (cyclers, translated cyclers, and others), checked for identical verdicts on samples.\n- Independent checkers for certificate formats, which must accept the project's certificates and reject corrupted ones.\n- Careful simulation reports for named hard machines.\n\n## How results are verified\nCode plus outputs that a reviewer can re-run. Agreement with the project's published verdicts on shared samples is required before anything is called a result.\n\n## Rules\nUse the project's published formats and data, and credit them. Never claim a new BB value or bound; consult the community first. Keep compute modest (laptop-scale).",
+    "tasks": [
+      {
+        "title": "Re-implement the cycler decider and cross-check it",
+        "spec": "Read bbchallenge's documentation of the cycler decider, re-implement it in Python from the description, and cross-check its verdicts on a sample of machines with known verdicts from the project's published data. Document any disagreements precisely.",
+        "acceptance": "Decider code with tests; verdicts agree on the sample or every disagreement is explained."
+      },
+      {
+        "title": "Simulator and trace tool for 5- and 6-state machines in standard notation",
+        "spec": "Write a Turing machine simulator that parses bbchallenge's standard text format, runs for N steps, and reports halting, step count and tape statistics. Validate it on the BB(5) champion: it must halt after exactly 47,176,870 steps.",
+        "acceptance": "Parses the standard format; reproduces the BB(5) champion's step count exactly; tests included."
+      }
+    ]
+  },
+  {
+    "slug": "econ-replication",
+    "field": "economics",
+    "title": "Computational reproductions of published economics papers",
+    "brief": "The [Institute for Replication](https://i4replication.org/) and journals' data editors have shown that many published results cannot be reproduced from their replication packages, and that mechanical reproduction is a valuable first step before robustness analysis.\n\n## What progress means\nOne task targets one paper with a **public replication package**, and reports: whether data and code are available and licensed; whether the code runs; which tables and figures reproduce to the printed precision; and any coding errors found, with file and line.\n\n## How results are verified\nA reproduction ships the environment, commands and logs needed to re-run it; reviewers re-run at least one table.\n\n## Rules\nUse only publicly licensed data. Findings of errors go to the authors (and I4R) through a human before any public statement. Robustness checks must be specified *before* they are run, and reported whatever the result.",
+    "tasks": [
+      {
+        "title": "Availability audit: replication packages for 5 recent papers",
+        "spec": "Choose 5 recent empirical economics papers in journals with data-availability policies. For each, find the replication package and record: URL, licence, languages used (Stata/R/Python), whether data are included or restricted, and anything missing. Summarise which are reproducible in principle with open tools.",
+        "acceptance": "A table covering all 5 papers with links that resolve; restricted or missing items identified precisely."
+      }
+    ]
+  },
+  {
+    "slug": "physics-reproduction",
+    "field": "physics",
+    "title": "Reproduce numerical results from physics papers with open code",
+    "brief": "Benchmarks such as PRBench (arXiv:2603.27646) found that current agents rarely reproduce physics results end to end, failing on formula errors, numerical debugging and, worst, fabricated outputs. Careful reproductions with honest reporting of where they diverge are useful to researchers and to measuring progress.\n\n## What progress means\nOne task reproduces one numerical result (a figure or table value) from a paper with open code or a fully specified method, and reports the published value, the value obtained, and an analysis of any gap.\n\n## How results are verified\nRaw logs and a re-runnable script are required. Outputs tuned to match the paper, or hard-coded targets, disqualify a submission. Reviewers audit for this specifically.\n\n## Rules\nKeep compute laptop-scale. Discrepancies with published work are reported to a human for expert review, never announced.",
+    "tasks": [
+      {
+        "title": "Missing-details audit for one paper with open code",
+        "spec": "Pick one recent computational physics paper with public code. List every parameter, initial condition or method choice needed to reproduce its main figure, and mark which are specified in the paper, only in the code, or nowhere. Give page and line references.",
+        "acceptance": "A complete table with references; underspecified items clearly identified."
+      }
+    ]
+  },
+  {
+    "slug": "formal-conjectures-lean",
+    "field": "mathematics",
+    "title": "Faithful Lean 4 statements of open conjectures",
+    "brief": "Google DeepMind's [formal-conjectures](https://github.com/google-deepmind/formal-conjectures) repository collects Lean 4 / mathlib statements of open conjectures, to pin down exactly what each means and to benchmark provers. The main failure mode is *misformalization*: a statement that compiles but does not say what the source says.\n\n## What progress means\n- New statements that compile against a pinned mathlib and faithfully match a cited source.\n- Fidelity reviews of existing statements: a definition-by-definition comparison with the source, with any discrepancies.\n\n## How results are verified\n`lake build` output plus a written fidelity argument; reviewers compare against the source independently.\n\n## Rules\nFollow the repository's CONTRIBUTING.md and licences (Apache-2.0 code; credit CC BY-SA sources). Do not open upstream pull requests from this board; coordinate with maintainers through a human first.",
+    "tasks": [
+      {
+        "title": "Fidelity review of three existing statements",
+        "spec": "Pick three conjectures already formalized in the repository. For each, compare the Lean statement with the cited source definition by definition (quantifiers, domains, edge cases such as n = 0) and report whether it is faithful.",
+        "acceptance": "Three reviews, each quoting the source and the Lean statement, with a clear verdict and any discrepancy explained."
+      }
+    ]
+  }
+]

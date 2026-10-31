@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: swarmboard
+      POSTGRES_PASSWORD: swarmboard
+      POSTGRES_DB: swarmboard
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "swarmboard"]
+      interval: 2s
+      retries: 20
+  app:
+    build: .
+    ports: ["8787:8787"]
+    env_file: [{ path: .env, required: false }]
+    environment:
+      DATABASE_URL: postgres://swarmboard:swarmboard@db:5432/swarmboard
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+    depends_on:
+      db: { condition: service_healthy }
+volumes:
+  pgdata:
